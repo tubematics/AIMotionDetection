@@ -1,8 +1,24 @@
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+# and associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
+# is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 ## USAGE
 # download RPi Cam Control v6.6.11 on your raspberry pi
 # open Browser with "IPAdressPi"/html
 # run ai motion detection
-
+#
+# example modified from https://www.pyimagesearch.com/2020/02/10/opencv-dnn-with-nvidia-gpus-1549-faster-yolo-ssd-and-mask-r-cnn/
 # import the necessary packages
 import numpy as np
 import imutils
@@ -16,7 +32,8 @@ from io import BytesIO
 
 class AIMotionDetection():
   def __init__(self):
-    self.url        = "http://0.0.0.0/html/cam_pic.php?time=%d&pDelay=40000" %frameCounter # change to RPi IP adress
+    self.ipRPi      = "192.168.178.74"
+    self.url        = "http://" + self.ipRPi + "/html/cam_pic.php?time=%d&pDelay=40000" %frameCounter # change to RPi IP adress
     self.password   = "securepassword"    # change to password of RPi
     self.prototxt   = "MobileNetSSD_deploy.prototxt"
     self.model      = "MobileNetSSD_deploy.caffemodel"
@@ -122,17 +139,19 @@ class AIMotionDetection():
       else:
         objectname = str(self.CLASSES[idx])  
 
+      # update the screen every 5 cycles 
       if counter % 5 == 0:
-        cmdline = ["sshpass", "-p", self.password, "ssh", "pi@192.168.178.74", "echo 'an " + objectname + "' >/var/www/html/FIFO11"]
+        cmdline = ["sshpass", "-p", self.password, "ssh", "pi@" + self.ipRPi, "echo 'an " + objectname + "' >/var/www/html/FIFO11"]
         cmdOne = True
         sub = subprocess.Popen(cmdline, stdin=subprocess.PIPE)
         print("[INFO] Text Objectname set...")
 
-      if 'person' in objectList:      
+      # choose detected object from this list (self.CLASSES)
+      if 'bird' in objectList:      
         timer = 0
 
         if videoOn == False:
-          cmdline = ["sshpass", "-p", self.password, "ssh", "pi@192.168.178.74", "echo 'ca 1\r\nab 1' >/var/www/html/FIFO1"]
+          cmdline = ["sshpass", "-p", self.password, "ssh", "pi@" + self.ipRPi, "echo 'ca 1\r\nab 1' >/var/www/html/FIFO1"]
           sub2 = subprocess.Popen(cmdline, stdin=subprocess.PIPE)
           print('[INFO] Video started...')
           videoOn = True
@@ -141,9 +160,10 @@ class AIMotionDetection():
         if timer == 0:
           timer = time.time()
 
+        # switch off the video 5 s after object no longer detected
         if (time.time()-timer) > 5:
           if videoOn == True:
-            cmdline = ["sshpass", "-p", self.password, "ssh", "pi@192.168.178.74", "echo 'ca 0\r\nab 0' >/var/www/html/FIFO1"]
+            cmdline = ["sshpass", "-p", self.password, "ssh", "pi@" + self.ipRPi, "echo 'ca 0\r\nab 0' >/var/www/html/FIFO1"]
             sub4 = subprocess.Popen(cmdline, stdin=subprocess.PIPE)
             print("[INFO] Video stopped")
             timer = 0
@@ -151,6 +171,7 @@ class AIMotionDetection():
           else:
             pass
 
+      # dont over do it - we are communicating with a pi
       time.sleep(0.25)
 
       # check to see if the output frame should be displayed to our
