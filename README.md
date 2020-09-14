@@ -10,4 +10,4 @@ The http call to grab a frame from the PI is a simple GET to http://<IP_of_PI>/h
 
 No modifications to the standard installation are required PI side but this has one drawback. There is currently no known way to annotate the detected birds with boxes and detection scores within the PI stream. This can only be done on the inference PC as the image above demonstrates. The image above is not of a high quality as it has been reduced in size to speed things up and we do not require the higher resolution of the original stream image to detect birds. The only option known to us is to use the pipe communication to change the annotation of the stream (echo an "birds found" >/var/www/html/FIFO11) does the trick! 
 
-Stephen
+Stephen Gardner
