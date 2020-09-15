@@ -32,8 +32,9 @@ from io import BytesIO
 
 class AIMotionDetection():
   def __init__(self):
-    self.ipRPi      = "192.168.178.74"
-    self.url        = "http://" + self.ipRPi + "/html/cam_pic.php?time=%d&pDelay=40000" %frameCounter # change to RPi IP adress
+    self.ipRPi      = "0.0.0.0"
+    self.frameCounter = 0
+    self.url        = "http://" + self.ipRPi + "/html/cam_pic.php?time=%d&pDelay=40000" %self.frameCounter # change to RPi IP adress
     self.password   = "securepassword"    # change to password of RPi
     self.prototxt   = "MobileNetSSD_deploy.prototxt"
     self.model      = "MobileNetSSD_deploy.caffemodel"
@@ -43,11 +44,12 @@ class AIMotionDetection():
     self.confidence = 0.2       # minimum probability to filter weak detections
     self.gpuUse     = False     # boolean indicating if CUDA GPU should be used
     
-    self.COLORS = np.random.uniform(0, 255, size=(len(self.CLASSES), 3))
     self.CLASSES    = ["background", "aeroplane", "bicycle", "bird", "boat",
                         "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
                         "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
                         "sofa", "train", "tvmonitor"]
+    
+    self.COLORS = np.random.uniform(0, 255, size=(len(self.CLASSES), 3))
     
 
   def inference(self, detections, frame):
@@ -84,7 +86,7 @@ class AIMotionDetection():
     return objectList, idx
 
   def detect(self):
-    frameCounter = 0
+    self.frameCounter = 0
     timer = 0
     videoOn = False
     counter = 0
@@ -106,7 +108,7 @@ class AIMotionDetection():
     # loop over the frames from the video stream
     while True:
       counter += 1
-      frameCounter += 1
+      self.frameCounter += 1
       writer = None
 
       r = requests.get(url = self.url) 
